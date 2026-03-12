@@ -1,0 +1,114 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  application.yml — Skeleton Hexagonal                       ║
+# ║  Reemplaza los valores con los de tu entorno                 ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+spring:
+  application:
+    name: skeleton-hexagonal
+
+  # ── Base de datos (Aurora PostgreSQL en AWS) ──────────────────
+  datasource:
+      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+      driver-class-name: org.h2.Driver
+      username: sa
+      password: # 30 segundos para obtener conexión
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: true
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: always        # Incluye mensaje de error en respuestas
+
+# ── Actuator (Health, Info, Metrics) ─────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── OpenAPI / Swagger ────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs                           # Ruta del esquema JSON
+  swagger-ui:
+    path: /swagger-ui.html                       # Ruta del UI interactivo
+    enabled: true                                # Habilitá la interfaz
+    use-root-path: false
+    display-request-duration: true               # Muestra el tiempo de respuesta
+    operations-sorter: method                    # Ordena por método HTTP
+    tags-sorter: alpha                          # Ordena tags alfabéticamente
+
+# ── Configuración propia del skeleton ─────────────────────────
+# Aquí va la config específica de tu servicio
+app:
+  nombre: skeleton-hexagonal
+  version: 1.0.0
+
+  # Nombres de exchanges y queues de RabbitMQ
+  # (recomendado: no hardcodear en el código, leer desde aquí)
+  rabbitmq:
+    exchange: skeleton.exchange
+    queue:
+      entrada: skeleton.queue.entrada       # Cola que este servicio consume
+      salida:  skeleton.queue.salida        # Cola donde este servicio publica
+      dlq:     skeleton.queue.entrada.dlq   # Dead Letter Queue
+
+  # URL base del servicio externo que consumimos via HTTP
+  servicios:
+    externo:
+      base-url: ${SERVICIO_EXTERNO_URL:http://localhost:9090}
+      timeout-segundos: 10
+
+  # Redis: tiempo de vida del caché (en segundos)
+  cache:
+    ttl-segundos: 300    # 5 minutos
+
+# ── Logging ───────────────────────────────────────────────────
+logging:
+  level:
+    com.tuempresa.skeleton: DEBUG
+    org.springframework.amqp: INFO
+    org.hibernate.SQL: DEBUG        # Muestra SQL ejecutado
+
+---
+# ════════════════════════════════════════════════════════════════
+# PERFIL: test  (mvn test usa este perfil automáticamente)
+# ════════════════════════════════════════════════════════════════
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+
+  # Deshabilitar Redis y Rabbit en tests unitarios
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
