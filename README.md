@@ -9,6 +9,7 @@ Klisman Idarraga.
 
 # Documentacion del Swagger.
 Se encuentra en la carpeta de resources con el nombre de usuario.yaml
+https://github.com/brajogiver2/PerifieriaSemilleroEjercicioDDDHex/blob/main/servicios/src/main/resources/usuario.yaml
 
 # Ejecuciòn en postman:
 
