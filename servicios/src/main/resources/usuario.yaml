@@ -1,0 +1,197 @@
+openapi: 3.0.1
+info:
+  title: Perieria API
+  description: |-
+    API REST para la gestion de usuarios en el sistema Periferia
+
+    Esta API implementa arquitectura hexagonal con puertos y adaptadores.
+  contact:
+    name: Equipo de Desarrollo
+    url: https://github.com/tuempresa/periferia
+    email: desarrollo@periferia.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Servidor local
+  - url: https://api-staging.periferia.com
+    description: Ambiente de staging
+  - url: https://api.periferia.com
+    description: Ambiente de producciÃ³n
+tags:
+  - name: Usuario
+    description: Gestion de usuarios del sistema
+paths:
+  /api/v1/usuario/{id}:
+    get:
+      tags:
+        - Usuario
+      summary: Obtener usuario por ID
+      description: Busca y retorna un usuario especifico por su ID
+      operationId: buscarPorId
+      parameters:
+        - name: id
+          in: path
+          description: ID unico del usuario
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntidadResponse'
+        '404':
+          description: Usuario no encontrado
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/EntidadResponse'
+    put:
+      tags:
+        - Usuario
+      summary: Actualizar usuario
+      description: Actualiza los datos de un usuario existente
+      operationId: actualizar
+      parameters:
+        - name: id
+          in: path
+          description: ID Ãºnico del usuario
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarEntidadRequest'
+        required: true
+      responses:
+        '200':
+          description: Usuario actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntidadResponse'
+        '400':
+          description: Datos invÃ¡lidos en el request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/EntidadResponse'
+        '404':
+          description: Usuario no encontrado
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/EntidadResponse'
+    delete:
+      tags:
+        - Usuario
+      summary: Desactivar usuario
+      description: Marca un usuario como INACTIVO (soft delete)
+      operationId: desactivar
+      parameters:
+        - name: id
+          in: path
+          description: ID Ãºnico del usuario
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Usuario desactivado exitosamente
+        '404':
+          description: Usuario no encontrado
+  /api/v1/usuario:
+    get:
+      tags:
+        - Usuario
+      summary: Listar usuarios activos
+      description: Retorna una lista de todos los usuarios en estado ACTIVO
+      operationId: listar
+      responses:
+        '200':
+          description: Lista de usuarios activos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntidadResponse'
+    post:
+      tags:
+        - Usuario
+      summary: Crear un nuevo usuario
+      description: Crea un nuevo usuario en el sistema
+      operationId: crear
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearEntidadRequest'
+        required: true
+      responses:
+        '201':
+          description: Usuario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntidadResponse'
+        '400':
+          description: Datos invÃ¡lidos en el request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/EntidadResponse'
+components:
+  schemas:
+    ActualizarEntidadRequest:
+      required:
+        - nombre
+      type: object
+      properties:
+        nombre:
+          type: string
+        descripcion:
+          type: string
+    EntidadResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID Ãºnico del usuario
+          example: 550e8400-e29b-41d4-a716-446655440000
+        nombre:
+          type: string
+          description: Nombre del usuario
+          example: Juan PÃ©rez
+        descripcion:
+          type: string
+          description: DescripciÃ³n breve del usuario
+          example: Usuario activo del sistema
+        estado:
+          type: string
+          description: Estado actual del usuario (ACTIVO o INACTIVO)
+          example: ACTIVO
+        creadoEn:
+          type: string
+          description: Fecha y hora de creaciÃ³n
+          format: date-time
+        actualizadoEn:
+          type: string
+          description: Fecha y hora de Ãºltima actualizaciÃ³n
+          format: date-time
+    CrearEntidadRequest:
+      required:
+        - nombre
+      type: object
+      properties:
+        nombre:
+          maxLength: 100
+          minLength: 0
+          type: string
+        descripcion:
+          type: string
