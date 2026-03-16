@@ -1,11 +1,6 @@
 # PerifieriaSemilleroEjercicioDDDHex
 API REST para la gestión de usuarios en el sistema Períferia
 
-Brayan Gil Vergara.
-
-Luis Herreño.
-
-Klisman Idarraga.
 
 # Documentacion del Swagger.
 Se encuentra en la carpeta de resources con el nombre de usuario.yaml
