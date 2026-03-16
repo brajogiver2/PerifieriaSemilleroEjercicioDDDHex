@@ -18,6 +18,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -42,13 +45,15 @@ import java.util.List;
 @Tag(name = "Usuario", description = "Gestión de usuarios del sistema")
 public class UsuarioController {
 
+    private static final Logger log = LoggerFactory.getLogger(UsuarioController.class);
+
     private final UsuarioUseCase usuarioUseCase; // ← interfaz, no implementación
 
     public UsuarioController(UsuarioUseCase usuarioUseCase) {
         this.usuarioUseCase = usuarioUseCase;
     }
 
-    /** POST /api/v1/entidades — Crear */
+    /** POST /api/v1/usuario — Crear */
     @PostMapping
     @Operation(summary = "Crear un nuevo usuario", description = "Crea un nuevo usuario en el sistema")
     @ApiResponses({
@@ -57,12 +62,18 @@ public class UsuarioController {
         @ApiResponse(responseCode = "400", description = "Datos inválidos en el request")
     })
     public ResponseEntity<EntidadResponse> crear(@Valid @RequestBody CrearEntidadRequest request) {
+
+        log.info("evento=crear_usuario_request nombre={}", request.nombre());
+
         var command   = new UsuarioUseCase.CrearEntidadCommand(request.nombre(), request.descripcion());
         Usuario creada = usuarioUseCase.crear(command);
+
+        log.info("evento=usuario_creado id={}", creada.getId());
+
         return ResponseEntity.status(HttpStatus.CREATED).body(EntidadResponse.from(creada));
     }
 
-    /** GET /api/v1/entidades/{id} — Buscar por ID */
+    /** GET /api/v1/usuario/{id} — Buscar por ID */
     @GetMapping("/{id}")
     @Operation(summary = "Obtener usuario por ID", description = "Busca y retorna un usuario específico por su ID")
     @ApiResponses({
@@ -73,24 +84,36 @@ public class UsuarioController {
     public ResponseEntity<EntidadResponse> buscarPorId(
             @Parameter(description = "ID único del usuario") 
             @PathVariable String id) {
+
+        log.debug("evento=buscar_usuario_request id={}", id);
+
         Usuario usuario = usuarioUseCase.buscarPorId(id);
+
+        log.info("evento=usuario_encontrado id={}", usuario.getId());
+
         return ResponseEntity.ok(EntidadResponse.from(usuario));
     }
 
-    /** GET /api/v1/entidades — Listar todas las activas */
+    /** GET /api/v1/usuario — Listar todas las activas */
     @GetMapping
     @Operation(summary = "Listar usuarios activos", description = "Retorna una lista de todos los usuarios en estado ACTIVO")
     @ApiResponse(responseCode = "200", description = "Lista de usuarios activos",
                  content = @Content(mediaType = "application/json", schema = @Schema(implementation = EntidadResponse.class)))
     public ResponseEntity<List<EntidadResponse>> listar() {
+
+        log.debug("evento=listar_usuarios_activos_request");
+
         List<EntidadResponse> respuesta = usuarioUseCase.listarActivas()
             .stream()
             .map(EntidadResponse::from)
             .toList();
+
+        log.info("evento=usuarios_activos_listados total={}", respuesta.size());
+
         return ResponseEntity.ok(respuesta);
     }
 
-    /** PUT /api/v1/entidades/{id} — Actualizar */
+    /** PUT /api/v1/usuario/{id} — Actualizar */
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar usuario", description = "Actualiza los datos de un usuario existente")
     @ApiResponses({
@@ -104,12 +127,17 @@ public class UsuarioController {
             @PathVariable String id,
             @Valid @RequestBody ActualizarEntidadRequest request) {
 
+        log.info("evento=actualizar_usuario_request id={}", id);
+
         var command      = new UsuarioUseCase.ActualizarEntidadCommand(request.nombre(), request.descripcion());
         Usuario actualizada = usuarioUseCase.actualizar(id, command);
+
+        log.info("evento=usuario_actualizado id={}", actualizada.getId());
+
         return ResponseEntity.ok(EntidadResponse.from(actualizada));
     }
 
-    /** DELETE /api/v1/entidades/{id} — Desactivar (soft delete) */
+    /** DELETE/api/v1/usuario/{id} — Desactivar (soft delete) */
     @DeleteMapping("/{id}")
     @Operation(summary = "Desactivar usuario", description = "Marca un usuario como INACTIVO (soft delete)")
     @ApiResponses({
@@ -119,7 +147,13 @@ public class UsuarioController {
     public ResponseEntity<Void> desactivar(
             @Parameter(description = "ID único del usuario") 
             @PathVariable String id) {
+
+        log.warn("evento=desactivar_usuario_request id={}", id);
+
         usuarioUseCase.desactivar(id);
+
+        log.info("evento=usuario_desactivado id={}", id);
+
         return ResponseEntity.noContent().build();
     }
 
